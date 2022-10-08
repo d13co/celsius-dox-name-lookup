@@ -1,0 +1,143 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <title>Celsius DOX Name Lookup</title>
+  <meta name="description" content="Lookup your name on the Celsius Oct 5, 2022 filing document (fully offline, private)">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:title" content="Celsius DOXXED? Private name lookup for Oct 5, 2022 Celsius filing">
+  <meta property="og:type" content="">
+  <meta property="og:url" content="https://celsius.d13.co">
+  <meta property="og:image" content="">
+
+  <!-- Place favicon.ico in the root directory -->
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+
+  <meta name="theme-color" content="#fafafa">
+  <style>
+    body {
+      font-family: Arial;
+      font-size: 1.1rem;
+      padding: 15px;
+      padding-top: 5px;
+    }
+    .fullwidth {
+      display: flex;
+      padding: 5px;
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+    input {
+      flex: 1;
+      min-width: 50px;
+      font-size: 1.5rem;
+    }
+    .found {
+      color: red;
+    }
+    .not-found {
+      color: green;
+    }
+    #hasresults {
+      display: none;
+    }
+  </style>
+  <script src="/bloom-filters.js")>
+  </script>
+  <script>
+    const { default: ScalableBloomFilter } = require('bloom-filters');
+    async function main() {
+      try {
+        const data = await fetch('/txn-bloom.json');
+        window.txnbloom = ScalableBloomFilter.fromJSON(await data.json());
+        const data2 = await fetch('/balance-bloom.json');
+        window.balancebloom = ScalableBloomFilter.fromJSON(await data2.json());
+        document.getElementById('status').innerText = 'Yes';
+      } catch(e) {
+        document.getElementById('status').innerText = 'Error: '+e.message;
+        alert('Something went wrong loading the database: '+e.message+"\n\nReload the page to try again");
+      }
+    }
+    main();
+
+    function lookup(input) {
+      const { value } = input;
+      const valueUpperCase = value.toUpperCase();
+      const hasResultsElement = document.getElementById('hasresults');
+      const resultElement = document.getElementById('result');
+      const resultElement2 = document.getElementById('result2');
+      if (!valueUpperCase) {
+        hasResultsElement.style.display = 'none';
+        resultElement.innerHTML = '';
+        resultElement2.innerHTML = '';
+        return;
+      }
+      hasResultsElement.style.display = 'block';
+      const txnFound = txnbloom.has(valueUpperCase);
+      resultElement.className = txnFound ? 'found' : 'not-found';
+      const text = !txnFound ? 'is <strong>not</strong>' : '<strong>is</strong>';
+      resultElement.innerHTML = `[${valueUpperCase}] ${text} in the Celsius transactions documents`;
+
+      const balanceFound = balancebloom.has(valueUpperCase);
+      resultElement2.className = balanceFound ? 'found' : 'not-found';
+      const text2 = !balanceFound ? 'is <strong>not</strong>' : '<strong>is</strong>';
+      resultElement2.innerHTML = `[${valueUpperCase}] ${text2} in the Celsius balance documents`;
+    }
+    function example(text) {
+      const input = document.getElementById('in');
+      input.value = text;
+      lookup(input);
+      return false;
+    }
+  </script>
+</head>
+
+<body>
+
+  <h1>Celsius DOX Name Lookup</h1>
+
+  <p>Want to know if your name is included in the Celsius bankruptcy filing documents of October 2022?</p>
+
+  <p>Enter passport name or full company name. Only exact match results are shown, including punctuation.</p>
+
+  <p class="fullwidth">
+    <input id="in" type="text" oninput="lookup(this)" />
+  </p>
+
+  <div id="hasresults">
+    <hr />
+    <p id="result2"></p>
+    <p id="result"></p>
+  </div>
+
+  <hr />
+
+  <p><strong>This microsite operates fully offline. Your data is not sent anywhere.</strong></p>
+  <p>You can ensure this by loading this page in a private browsing window and going offline.</p>
+
+  <hr />
+
+  <p>Database loaded: <span id="status">Loading</span></p>
+
+  <p>Try some examples: 
+    <ul>
+      <li><a href="#" onclick="example('CELSIUS VIP WALLET')">CELSIUS VIP WALLET</a> (matches transactions)</li>
+      <li><a href="#" onclick="example('AM VENTURES HOLDING INC.')">AM VENTURES HOLDING INC.</a> (matches balance)</li>
+      <li><a href="#" onclick="example('AM VENTURES HOLDING INC')">AM VENTURES HOLDING INC</a> (no match - missing period)</li>
+    </ul>
+  </p>
+
+  <hr />
+
+  <p><a target="_blank" href="https://d13.co/celsius-filing-document-lookup-microsite/">How does this work?</a><br />
+  By the <a target="_blank" href="https://d13.co/">D13.co//ective</a></p>
+  <script>
+    document.getElementById('in').focus();
+  </script>
+</body>
+
+</html>
